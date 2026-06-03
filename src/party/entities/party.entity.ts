@@ -9,5 +9,5 @@ export class Party {
   name: string;
 
   @Column({ default: '' })
-  symbolUrl: string;
+  logoUrl: string;
 }

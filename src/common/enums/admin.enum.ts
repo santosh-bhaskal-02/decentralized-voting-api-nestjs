@@ -1,0 +1,5 @@
+export enum AdminPermission {
+  VIEW_DASHBOARD = 'VIEW_DASHBOARD',
+  VIEW_REPORTS = 'VIEW_REPORTS',
+  MANAGE_USERS = 'MANAGE_USERS',
+}

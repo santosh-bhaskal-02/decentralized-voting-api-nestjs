@@ -1,10 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { VoterRegistration } from './entities/voter-registration.entity';
 import { DatasetN } from './entities/datasetn.entity';
 import { Candidate } from '../candidate/entities/candidate.entity';
+import { Vote } from '../vote/entities/vote.entity';
 
 @Injectable()
 export class UserService {
@@ -17,6 +22,8 @@ export class UserService {
     private readonly datasetNRepository: Repository<DatasetN>,
     @InjectRepository(Candidate)
     private readonly candidateRepository: Repository<Candidate>,
+    @InjectRepository(Vote)
+    private readonly voteRepository: Repository<Vote>,
   ) {}
 
   // Add voter directly by Admin
@@ -50,7 +57,9 @@ export class UserService {
     voter.voterCardNumber = voter.voterId;
     await this.userRepository.save(voter);
 
-    console.log(`[EMAIL SEND SIMULATION] Sent admin-created voter credentials to: ${voter.email}`);
+    console.log(
+      `[EMAIL SEND SIMULATION] Sent admin-created voter credentials to: ${voter.email}`,
+    );
 
     return {
       message: 'Voter added successfully',
@@ -116,7 +125,9 @@ export class UserService {
     await this.userRepository.save(voter);
     await this.registrationRepository.remove(reg);
 
-    console.log(`[EMAIL SEND SIMULATION] Sent approved registration email to: ${voter.email}`);
+    console.log(
+      `[EMAIL SEND SIMULATION] Sent approved registration email to: ${voter.email}`,
+    );
 
     return { message: 'Voter approved and credentials sent via email' };
   }
@@ -132,20 +143,34 @@ export class UserService {
   }
 
   // --- DatasetN (Pre-verified Voter Dataset) Operations ---
-  
+
   // Add single pre-verified voter to DatasetN
   async addDatasetVoter(body: any) {
-    const { fullName, email, mobileNumber, dob, aadhaarNumber, voterCardNumber } = body;
+    const {
+      fullName,
+      email,
+      mobileNumber,
+      dob,
+      aadhaarNumber,
+      voterCardNumber,
+    } = body;
     if (!fullName || !aadhaarNumber || !voterCardNumber) {
-      throw new BadRequestException('Full Name, Aadhaar Number, and Voter Card Number are required');
+      throw new BadRequestException(
+        'Full Name, Aadhaar Number, and Voter Card Number are required',
+      );
     }
 
     const existing = await this.datasetNRepository.findOne({
-      where: [{ aadhaarNumber: aadhaarNumber.trim() }, { voterCardNumber: voterCardNumber.trim() }],
+      where: [
+        { aadhaarNumber: aadhaarNumber.trim() },
+        { voterCardNumber: voterCardNumber.trim() },
+      ],
     });
 
     if (existing) {
-      throw new BadRequestException('A voter with this Aadhaar or Voter Card Number already exists in the pre-verified dataset');
+      throw new BadRequestException(
+        'A voter with this Aadhaar or Voter Card Number already exists in the pre-verified dataset',
+      );
     }
 
     const datasetVoter = new DatasetN();
@@ -157,7 +182,10 @@ export class UserService {
     datasetVoter.voterCardNumber = voterCardNumber.trim();
 
     await this.datasetNRepository.save(datasetVoter);
-    return { message: 'Pre-verified voter added to dataset successfully', data: datasetVoter };
+    return {
+      message: 'Pre-verified voter added to dataset successfully',
+      data: datasetVoter,
+    };
   }
 
   // Get all DatasetN records
@@ -173,14 +201,24 @@ export class UserService {
 
     const savedRecords: DatasetN[] = [];
     for (const record of records) {
-      const { fullName, email, mobileNumber, dob, aadhaarNumber, voterCardNumber } = record;
+      const {
+        fullName,
+        email,
+        mobileNumber,
+        dob,
+        aadhaarNumber,
+        voterCardNumber,
+      } = record;
       if (!fullName || !aadhaarNumber || !voterCardNumber) {
         continue; // Skip invalid records
       }
 
       // Check duplicates
       const existing = await this.datasetNRepository.findOne({
-        where: [{ aadhaarNumber: aadhaarNumber.trim() }, { voterCardNumber: voterCardNumber.trim() }],
+        where: [
+          { aadhaarNumber: aadhaarNumber.trim() },
+          { voterCardNumber: voterCardNumber.trim() },
+        ],
       });
 
       if (existing) {
@@ -211,9 +249,11 @@ export class UserService {
   // --- Candidate Operations (Admin) ---
 
   async addCandidate(body: any) {
-    const { name, party, position, constituency, symbolUrl, electionType } = body;
+    const { name, party, position, constituency, logoUrl, electionType } = body;
     if (!name || !party) {
-      throw new BadRequestException('Candidate name and party name are required');
+      throw new BadRequestException(
+        'Candidate name and party name are required',
+      );
     }
 
     const candidate = new Candidate();
@@ -221,7 +261,7 @@ export class UserService {
     candidate.party = party.trim();
     candidate.position = position?.trim() || '';
     candidate.constituency = constituency?.trim() || null;
-    candidate.symbolUrl = symbolUrl?.trim() || null;
+    candidate.logoUrl = logoUrl?.trim() || null;
     candidate.electionType = electionType?.trim() || 'StateAssembly';
 
     await this.candidateRepository.save(candidate);
@@ -229,9 +269,11 @@ export class UserService {
   }
 
   async updateCandidate(id: number, body: any) {
-    const { name, party, position, constituency, symbolUrl, electionType } = body;
+    const { name, party, position, constituency, logoUrl, electionType } = body;
     if (!name || !party) {
-      throw new BadRequestException('Candidate name and party name are required');
+      throw new BadRequestException(
+        'Candidate name and party name are required',
+      );
     }
 
     const candidate = await this.candidateRepository.findOne({ where: { id } });
@@ -244,9 +286,9 @@ export class UserService {
     candidate.position = position?.trim() || '';
     candidate.constituency = constituency?.trim() || null;
     candidate.electionType = electionType?.trim() || 'StateAssembly';
-    
-    if (symbolUrl !== undefined) {
-      candidate.symbolUrl = symbolUrl?.trim() || null;
+
+    if (logoUrl !== undefined) {
+      candidate.logoUrl = logoUrl?.trim() || null;
     }
 
     await this.candidateRepository.save(candidate);
@@ -266,9 +308,49 @@ export class UserService {
     return { message: 'Candidate deleted successfully' };
   }
 
+  async getDashboardStats() {
+    const totalVoters = await this.userRepository.count();
+    const pendingVoters = await this.registrationRepository.count({
+      where: { isApproved: false, isRejected: false },
+    });
+    const totalCandidates = await this.candidateRepository.count();
+    const totalVotes = await this.voteRepository.count();
+
+    const candidates = await this.candidateRepository.find();
+    const votes = await this.voteRepository.find();
+
+    const topCandidates = candidates
+      .map((c) => {
+        const count = votes.filter((v) => v.candidateId === c.id).length;
+        return {
+          candidateId: c.id,
+          candidateName: c.name,
+          party: c.party,
+          voteCount: count,
+        };
+      })
+      .sort((a, b) => b.voteCount - a.voteCount)
+      .slice(0, 5);
+
+    return {
+      totalVoters,
+      pendingVoters,
+      totalCandidates,
+      totalVotes,
+      topCandidates,
+    };
+  }
+
+  async resetAllVoters() {
+    await this.userRepository.update({}, { hasVoted: false });
+    await this.voteRepository.clear();
+    return { message: 'All voter statuses and votes have been reset for the new election.' };
+  }
+
   // Helpers
   private generatePassword(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < 8; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));

@@ -18,7 +18,7 @@ export class Candidate {
   constituency: string;
 
   @Column({ nullable: true })
-  symbolUrl: string;
+  logoUrl: string;
 
   @Column({ default: 'StateAssembly' })
   electionType: string;

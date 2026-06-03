@@ -75,4 +75,14 @@ export class UserController {
   async deleteCandidate(@Param('id') id: string) {
     return await this.userService.deleteCandidate(+id);
   }
+
+  @Get('Dashboard/stats')
+  async getDashboardStats() {
+    return await this.userService.getDashboardStats();
+  }
+
+  @Post('reset-election')
+  async resetElection() {
+    return await this.userService.resetAllVoters();
+  }
 }

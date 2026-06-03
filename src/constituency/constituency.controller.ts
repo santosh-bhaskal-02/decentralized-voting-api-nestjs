@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ConstituencyService } from './constituency.service';
 import { CreateConstituencyDto } from './dto/create-constituency.dto';
 import { UpdateConstituencyDto } from './dto/update-constituency.dto';
@@ -9,6 +9,11 @@ export class ConstituencyController {
 
   @Post()
   create(@Body() createConstituencyDto: CreateConstituencyDto) {
+    return this.constituencyService.create(createConstituencyDto);
+  }
+
+  @Post('add')
+  createWithAdd(@Body() createConstituencyDto: CreateConstituencyDto) {
     return this.constituencyService.create(createConstituencyDto);
   }
 
@@ -24,6 +29,11 @@ export class ConstituencyController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateConstituencyDto: UpdateConstituencyDto) {
+    return this.constituencyService.update(+id, updateConstituencyDto);
+  }
+
+  @Put(':id')
+  updateWithPut(@Param('id') id: string, @Body() updateConstituencyDto: UpdateConstituencyDto) {
     return this.constituencyService.update(+id, updateConstituencyDto);
   }
 

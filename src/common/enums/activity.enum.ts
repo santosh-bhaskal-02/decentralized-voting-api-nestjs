@@ -1,0 +1,8 @@
+export enum ActivityTargetType {
+  LISTING = 'LISTING',
+  USER = 'USER',
+  INQUIRY = 'INQUIRY',
+  BANNER = 'BANNER',
+  SUBSCRIPTION = 'SUBSCRIPTION',
+  SAVED_LISTING = 'SAVED_LISTING',
+}
